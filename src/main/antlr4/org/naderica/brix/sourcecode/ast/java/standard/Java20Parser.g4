@@ -4,7 +4,7 @@
 parser grammar Java20Parser;
 
 @header {
-package org.naderica.brix.sourcecode.ast.java.standard;
+package org.naderica.parser.sourcecode.ast.java.standard;
 }
 
 options {

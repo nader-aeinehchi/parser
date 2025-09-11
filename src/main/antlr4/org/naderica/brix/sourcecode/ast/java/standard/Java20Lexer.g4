@@ -5,7 +5,7 @@
 lexer grammar Java20Lexer;
 
 @header {
-package org.naderica.brix.sourcecode.ast.java.standard;
+package org.naderica.parser.sourcecode.ast.java.standard;
 }
 
 // LEXER
