@@ -1,0 +1,65 @@
+# draw.io
+*.bkp
+
+.cache-main
+.cache-tests
+.settings/
+bin/
+project/
+
+
+
+# macOS
+.DS_Store
+
+# sbt specific
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+project/local-plugins.sbt
+.history
+.ensime
+.ensime_cache/
+.sbt-scripted/
+local.sbt
+
+
+.class
+*.log
+
+# sbt specific
+.cache
+.history
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+**/.bloop
+.bsp/
+
+
+# Bloop
+.bsp
+
+# VS Code
+.vscode/
+
+# Metals
+.metals/
+.ammonite/
+metals.sbt
+metals/project/
+.scalafmt.conf
+
+# IDEA
+.idea
+.idea_modules
+/.worksheet/
+
+**/*.bkp
