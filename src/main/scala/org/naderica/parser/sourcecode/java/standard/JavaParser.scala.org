@@ -1,0 +1,42 @@
+package org.naderica.parser.sourcecode.java.standard
+
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.naderica.brix.sourcecode.ast.java.standard.Java20Lexer
+import org.naderica.brix.sourcecode.ast.java.standard.Java20Parser
+
+@main class JavaParser {
+  def main(args: Array[String]): Unit = {
+    if (args.length != 1) {
+      System.err.println("Usage: JavaParser <path_to_java_file>")
+      return
+    }
+
+    println("Trying with visitor")
+    val filePath = args(0)
+
+    try {
+      val input = CharStreams.fromFileName(filePath)
+      val lexer = new Java20Lexer(input)
+      val tokens = new CommonTokenStream(lexer)
+      val parser = new Java20Parser(tokens)
+      val tree = parser.compilationUnit()
+
+      // Create an instance of our custom visitor with the token stream.
+      val visitor = new SignatureVisitor(tokens)
+
+      // Visit the parse tree to trigger the logic in our visitor.
+      visitor.visit(tree)
+
+      println("Extracted Class Signatures and Members:")
+      import scala.jdk.CollectionConverters._
+      for (classInfo <- visitor.getResult.asScala) {
+        println(classInfo)
+      }
+    } catch {
+      case e: Exception =>
+        System.err.println(s"Error reading file: ${e.getMessage}")
+    }
+  }
+
+}

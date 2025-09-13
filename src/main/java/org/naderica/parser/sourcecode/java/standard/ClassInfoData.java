@@ -1,0 +1,14 @@
+package org.naderica.parser.sourcecode.java.standard;
+
+import java.util.List;
+
+public class ClassInfoData {
+	public String signature;
+	public List<String> memberSignatures;
+	public List<ClassInfo> innerClasses;
+
+	public ClassInfoData(List<String> memberSignatures, List<ClassInfo> innerClasses) {
+		this.memberSignatures = memberSignatures;
+		this.innerClasses = innerClasses;
+	}
+}

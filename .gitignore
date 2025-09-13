@@ -1,5 +1,9 @@
+# Special custom files used in this project
+!project/*.scala
+
+
 # draw.io
-*.bkp
+**/*.bkp
 
 .cache-main
 .cache-tests
@@ -26,26 +30,14 @@ project/local-plugins.sbt
 .sbt-scripted/
 local.sbt
 
-
-.class
+*.class
 *.log
 
-# sbt specific
 .cache
-.history
 .lib/
-dist/*
 target/
-lib_managed/
-src_managed/
-project/boot/
-project/plugins/project/
 **/.bloop
 .bsp/
-
-
-# Bloop
-.bsp
 
 # VS Code
 .vscode/
@@ -62,4 +54,3 @@ metals/project/
 .idea_modules
 /.worksheet/
 
-**/*.bkp

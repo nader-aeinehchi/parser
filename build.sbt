@@ -25,9 +25,10 @@ lazy val root = (project in file("."))
         "org.scalameta" %% "munit" % "latest.integration" % Test,
         "org.json" % "json" % "latest.integration",
         "org.scala-lang" %% "toolkit" % "0.7.0",
-        "org.antlr" % "antlr4-runtime" % "4.13.2"
+        "org.antlr" % "antlr4-runtime" % "4.13.2",
+        "org.antlr" % "antlr4" % "4.13.2"
       )
     },
     testOptions += Tests.Argument(TestFrameworks.JUnit, "-v")
   )
-  .enablePlugins(Antlr4Plugin)
+
