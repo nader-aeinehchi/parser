@@ -57,6 +57,7 @@ object Antlr4Gen extends AutoPlugin {
         if (exitCode != 0) sys.error(s"ANTLR4 failed for ${file.getName}")
       }
       log.info("ANTLR4 generation complete.")
-    }
+    },
+    Compile / compile := (Compile / compile).dependsOn(antlr4GenerateAll).value
   )
 }

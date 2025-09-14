@@ -1,5 +1,6 @@
 package org.naderica.parser.sourcecode.java.standard
 
+import scala.jdk.CollectionConverters._
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.naderica.parser.sourcecode.ast.java.standard.Java20Lexer
@@ -21,8 +22,6 @@ class JavaParser() {
       // Visit the parse tree to trigger the logic in our visitor.
       visitor.visit(tree)
 
-      println("Extracted Class Signatures and Members:")
-      import scala.jdk.CollectionConverters._
       for (classInfo <- visitor.getResult.asScala) {
         println(classInfo)
       }
@@ -36,6 +35,10 @@ class JavaParser() {
 
 @main
 def runJavaParser(pathToSourceFiles: String): Unit = {
+
+  // Clear terminal (ANSI escape code)
+  print("\u001b[2J\u001b[H")
+
   val parser = new JavaParser()
   val file = new java.io.File(pathToSourceFiles)
   if (file.isDirectory) {

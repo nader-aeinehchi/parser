@@ -111,3 +111,29 @@ or more specifically like:
 import org.naderica.parser.sourcecode.ast.java.standard.Java20Parser;
 import org.naderica.parser.sourcecode.ast.java.standard.Java20ParserBaseVisitor;
 ```
+
+
+# VSCode
+
+If you are running VSCode, you can create a custom launcher to run your custom parser with `CTRL+F5`.  Example:
+
+Create or modify the file `.vscode/launch.json` with the following content where `mainClass` and `args` are your main  method (`@main def ... `) and the arguments you want to pass to main method. 
+
+```
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "JavaParser",
+            "mainClass": "org.naderica.parser.sourcecode.java.standard.runJavaParser",
+            "args": ["src/main/java/acme/banking"]
+        }
+
+    ]
+}
+```

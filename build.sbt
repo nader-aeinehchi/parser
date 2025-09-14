@@ -1,4 +1,5 @@
 lazy val root = (project in file("."))
+  .enablePlugins(Antlr4Gen)
   .settings(
     inThisBuild(
       List(
@@ -26,10 +27,6 @@ lazy val root = (project in file("."))
         "org.antlr" % "antlr4-runtime" % "4.13.2",
         "org.antlr" % "antlr4" % "4.13.2"
       )
-    },
-    Compile / unmanagedSourceDirectories ++= {
-      val managed = (Compile / sourceManaged).value / "antlr4"
-      Seq(managed)
     },
     Compile / unmanagedSourceDirectories ++= {
       val managed = (Compile / sourceManaged).value / "antlr4"

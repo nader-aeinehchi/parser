@@ -11,4 +11,5 @@ public class ClassInfoData {
 		this.memberSignatures = memberSignatures;
 		this.innerClasses = innerClasses;
 	}
+
 }

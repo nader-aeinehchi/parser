@@ -15,90 +15,60 @@ class SignatureVisitor(val tokens: CommonTokenStream)
   private val classStack = new Stack[ClassInfo]()
   private val topLevelClasses = new ArrayList[ClassInfo]()
 
-  override def visitNormalClassDeclaration(ctx: NormalClassDeclarationContext): Unit = {
+  override def visitNormalClassDeclaration(
+      ctx: NormalClassDeclarationContext
+  ): Unit = {
+    val classSignature = extractSignature(ctx, _.classBody())
+    val currentClass = ClassInfo()
+    currentClass.signature = classSignature
 
-    val classSignature = tokens
-      .getText(
-        new Interval(
-          ctx.start.getTokenIndex,
-          ctx.classBody().start.getTokenIndex - 1
-        )
-      )
-      .trim
-
-    println(s"classSignature: $classSignature")
-
-    val currentClass = new ClassInfo()
-    currentClass.data.signature = classSignature
-
-// Add the new class to the appropriate list (top-level or inner).
     if (classStack.isEmpty) {
       topLevelClasses.add(currentClass)
     } else {
-      classStack.peek().data.innerClasses.add(currentClass)
+      classStack.peek().innerClasses.add(currentClass)
     }
-
-// Push the current class onto the stack to track nesting.
     classStack.push(currentClass)
-
-// Continue visiting children to find methods and inner classes.
     super.visitNormalClassDeclaration(ctx)
-
-// Pop the class from the stack when we're done visiting its
   }
 
-  /** Overrides the visit for a method declaration. Adds the method's signature
-    * to the current class on the stack.
-    */
   override def visitMethodDeclaration(ctx: MethodDeclarationContext): Unit = {
-    // Get the text from the start of the method to the start of its body.
-    val methodSignature = tokens
-      .getText(
-        new Interval(
-          ctx.start.getTokenIndex,
-          ctx.methodBody().start.getTokenIndex - 1
-        )
-      )
-      .trim
-
-    println(s"methodSignature: $methodSignature")
-
-    // Add the signature to the most recently added class on the stack.
+    val methodSignature = extractSignature(ctx, _.methodBody())
     if (!classStack.isEmpty) {
-      classStack.peek().data.memberSignatures.add(methodSignature)
+      classStack.peek().memberSignatures.add(methodSignature)
     }
-
-    // Do not visit children as we only need the signature.
     ()
   }
 
-  /** Overrides the visit for a constructor declaration. Adds the constructor's
-    * signature to the current class on the stack.
-    */
   override def visitConstructorDeclaration(
       ctx: ConstructorDeclarationContext
   ): Unit = {
-    // Get the text from the start of the constructor to the start of its body.
-    val constructorSignature = tokens
-      .getText(
-        new Interval(
-          ctx.start.getTokenIndex,
-          ctx.constructorBody().start.getTokenIndex - 1
-        )
-      )
-      .trim
-
-    println(s"constructorSignature: $constructorSignature")
-
-    // Add the signature to the most recently added class on the stack.
+    val constructorSignature = extractSignature(ctx, _.constructorBody())
     if (!classStack.isEmpty) {
-      classStack.peek().data.memberSignatures.add(constructorSignature)
+      classStack.peek().memberSignatures.add(constructorSignature)
     }
-
-    // Do not visit children as we only need the signature.
     ()
   }
 
   def getResult: List[ClassInfo] = topLevelClasses
+
+  /** Helper to extract the signature text from a context up to the start of its
+    * body.
+    */
+  private def extractSignature[C](
+      ctx: C,
+      getBody: C => org.antlr.v4.runtime.ParserRuleContext
+  ): String = {
+    tokens
+      .getText(
+        new Interval(
+          ctx
+            .asInstanceOf[org.antlr.v4.runtime.ParserRuleContext]
+            .start
+            .getTokenIndex,
+          getBody(ctx).start.getTokenIndex - 1
+        )
+      )
+      .trim
+  }
 
 }
