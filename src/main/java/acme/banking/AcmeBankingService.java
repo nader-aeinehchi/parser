@@ -13,6 +13,10 @@ import java.util.List;
  */
 interface AcmeBankingService {
 
+	public String PUBLIC_GREETING_MESSAGE = "Welcome to our application!";
+    int PACKAGE_MAX_USERS = 100;
+    double PI_VALUE = 3.14159;
+
 	/**
 	 * Banking system: Creates a bank account using the provided parameters.
 	 *

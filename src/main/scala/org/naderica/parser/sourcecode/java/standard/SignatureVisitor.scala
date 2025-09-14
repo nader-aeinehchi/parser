@@ -100,6 +100,56 @@ class SignatureVisitor(
     }
   }
 
+  override def visitConstantDeclaration(
+      ctx: ConstantDeclarationContext
+  ): Unit = {
+    val modifier = extractAccessModifier(ctx.constantModifier())
+    if (accessModifier.implied.contains(modifier)) {
+      val varList = ctx.variableDeclaratorList()
+      import scala.jdk.CollectionConverters._
+      for (vd <- varList.variableDeclarator().asScala) {
+        val name = vd.variableDeclaratorId().getText
+        val value =
+          if (vd.variableInitializer() != null)
+            " = " + vd.variableInitializer().getText
+          else ""
+        if (!classStack.isEmpty) {
+          classStack.peek().memberSignatures.add(s"$name$value")
+        }
+      }
+    }
+  }
+
+  override def visitFieldDeclaration(
+      ctx: FieldDeclarationContext
+  ): Unit = {
+    val modifier = extractAccessModifier(ctx.fieldModifier())
+    if (accessModifier.implied.contains(modifier)) {
+      val varList = ctx.variableDeclaratorList()
+      import scala.jdk.CollectionConverters._
+      for (vd <- varList.variableDeclarator().asScala) {
+        val name = vd.variableDeclaratorId().getText
+        val value =
+          if (vd.variableInitializer() != null)
+            " = " + vd.variableInitializer().getText
+          else ""
+        if (!classStack.isEmpty) {
+          classStack.peek().memberSignatures.add(s"$name$value")
+        }
+      }
+    }
+  }
+
+  override def visitEnumConstant(ctx: EnumConstantContext): Unit = {
+    val modifier = extractAccessModifier(ctx.enumConstantModifier())
+    if (accessModifier.implied.contains(modifier)) {
+      val name = ctx.identifier().getText
+      if (!classStack.isEmpty) {
+        classStack.peek().memberSignatures.add(name)
+      }
+    }
+  }
+
   /** Helper to handle top-level constructs (class, interface, enum, record) */
   private def handleTopLevelConstruct[C](
       ctx: C,
