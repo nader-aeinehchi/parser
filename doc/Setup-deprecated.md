@@ -1,3 +1,6 @@
+# Deprecated
+Antlr4 SBT plugin does not work with this project's setup and versions. Antlr4 SBT plugin is thus NOT used in this project.  We have developed our own "plugin-like" code under `project/Antlr4Gen.scala`.  See `setup.md` for more information.
+
 # Setup the environment
 Firstly, let us see how the environment should be set up.
 

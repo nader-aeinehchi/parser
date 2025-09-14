@@ -1,6 +1,14 @@
-# Welcome to naderica's parser project
-The purpose of this project is extract useful information from source code of an application such this information can be used to train a language model like GPT, DeepSeek or similar.  Your application may have been written in Java, Scala, Python and so forth.
+# Welcome to naderica's Code Parser for Language Model Training
 
-Currently, we are using ANTLR4 as the engine to define the language grammar and to parse the source code.
+This project is a source code parser designed to extract structured information from application codebases. The extracted data is intended for training and enhancing large language models (LLMs) like GPT, DeepSeek, and other similar architectures.
 
-See specific documentation under the `doc` folder
+## Key Features:
+
+**Language Support:** Currently supports Java and Scala, with plans to extend parsing capabilities to additional languages like Python.
+
+**Technology:** Built on ANTLR4, leveraging its powerful grammar definitions to ensure accurate parsing.
+
+**Purpose:** Transforms raw source code into a format suitable for machine learning, enabling models to better understand code syntax, patterns, and semantics.
+
+For detailed technical documentation, please see the [doc](doc) directory.
+
