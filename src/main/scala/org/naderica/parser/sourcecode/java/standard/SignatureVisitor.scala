@@ -80,6 +80,17 @@ class SignatureVisitor(
     }
   }
 
+// @Override public T visitInterfaceMethodDeclaration(Java20Parser.InterfaceMethodDeclarationContext ctx) { return visitChildren(ctx); }
+
+  override def visitInterfaceMethodDeclaration(
+      ctx: InterfaceMethodDeclarationContext
+  ): Unit = {
+    val modifier = extractAccessModifier(ctx.interfaceMethodModifier())
+    if (accessModifier.implied.contains(modifier)) {
+      extractAndAddMemberSignature(ctx, _.methodBody())
+    }
+  }
+
   override def visitConstructorDeclaration(
       ctx: ConstructorDeclarationContext
   ): Unit = {
@@ -148,10 +159,10 @@ class SignatureVisitor(
       modifiers: java.util.List[?]
   ): JavaAccessModifier = {
     import scala.jdk.CollectionConverters._
- 
+
     val mods = modifiers.asScala.map {
       case ctx: ParserRuleContext => ctx.getText
-      case other                                       => other.toString
+      case other                  => other.toString
     }
 
     if (mods.contains("private")) JavaAccessModifier.PRIVATE
