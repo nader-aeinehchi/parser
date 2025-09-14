@@ -5,10 +5,10 @@ package acme.banking;
  */
 public final class ZooKeeper extends Zoo implements ZooKeeperInterface {
 
-	private String name;
-	private String zooName;
-	private String location;
-
+	private String name = "Default Name";
+	String zooName;
+	protected String location;
+	public String publicString = "public string";
 	/**
 	 * Help keep the zoo in order
 	 * 

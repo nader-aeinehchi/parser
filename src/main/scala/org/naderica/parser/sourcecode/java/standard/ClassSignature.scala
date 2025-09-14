@@ -10,17 +10,18 @@ class ClassSignature {
 
   override def toString: String = {
     val sb = new StringBuilder
-    sb.append(s"Class Signature: $signature\n")
+    sb.append(s"Class Signature:\n    $signature\n")
     if (memberSignatures.nonEmpty) {
-      sb.append("  Members:\n")
+
+      sb.append("\tMembers, fields, constants:\n")
       memberSignatures.foreach { member =>
-        sb.append(s"    - $member\n")
+        sb.append(s"\t    - $member\n")
       }
     }
     if (innerClasses.nonEmpty) {
-      sb.append("  Inner Classes:\n")
+      sb.append("\tInner Classes:\n")
       innerClasses.foreach { inner =>
-        sb.append("    " + inner.toString.replace("\n", "\n    ") + "\n")
+        sb.append("\t- " + inner.toString + "\n")
       }
     }
     sb.toString

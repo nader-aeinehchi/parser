@@ -7,17 +7,6 @@ import org.antlr.v4.runtime.ParserRuleContext
 import org.naderica.parser.sourcecode.ast.java.standard.Java20Parser.*
 import org.naderica.parser.sourcecode.ast.java.standard.Java20ParserBaseVisitor
 
-enum JavaAccessModifier {
-  case PUBLIC, PROTECTED, PRIVATE, PACKAGE_PRIVATE
-
-  def implied: Set[JavaAccessModifier] = this match {
-    case PRIVATE         => Set(PRIVATE, PACKAGE_PRIVATE, PROTECTED, PUBLIC)
-    case PACKAGE_PRIVATE => Set(PACKAGE_PRIVATE, PROTECTED, PUBLIC)
-    case PROTECTED       => Set(PROTECTED, PUBLIC)
-    case PUBLIC          => Set(PUBLIC)
-  }
-}
-
 class SignatureVisitor(
     val tokens: CommonTokenStream,
     val accessModifier: JavaAccessModifier = JavaAccessModifier.PUBLIC
@@ -113,8 +102,13 @@ class SignatureVisitor(
           if (vd.variableInitializer() != null)
             " = " + vd.variableInitializer().getText
           else ""
+        val typeType = ctx.unannType().getText + " "
+
         if (!classStack.isEmpty) {
-          classStack.peek().memberSignatures.append(s"$name$value")
+          classStack
+            .peek()
+            .memberSignatures
+            .append(s"${modifier.toModifier} $typeType$name$value")
         }
       }
     }
@@ -133,8 +127,14 @@ class SignatureVisitor(
           if (vd.variableInitializer() != null)
             " = " + vd.variableInitializer().getText
           else ""
+
+        val typeType = ctx.unannType().getText + " "
+
         if (!classStack.isEmpty) {
-          classStack.peek().memberSignatures.append(s"$name$value")
+          classStack
+            .peek()
+            .memberSignatures
+            .append(s"${modifier.toModifier} $typeType$name$value")
         }
       }
     }
