@@ -23,10 +23,10 @@ class SignatureVisitor(
     val accessModifier: JavaAccessModifier = JavaAccessModifier.PUBLIC
 ) extends Java20ParserBaseVisitor[Unit] {
 
-  private val classStack = new Stack[ClassInfo]()
-  private val topLevelClasses = new ArrayList[ClassInfo]()
+  private val classStack = new Stack[ClassSignature]()
+  private val topLevelClasses = new ArrayList[ClassSignature]()
 
-  def getResult: List[ClassInfo] = topLevelClasses
+  def getResult: List[ClassSignature] = topLevelClasses
 
   override def visitNormalClassDeclaration(
       ctx: NormalClassDeclarationContext
@@ -114,7 +114,7 @@ class SignatureVisitor(
             " = " + vd.variableInitializer().getText
           else ""
         if (!classStack.isEmpty) {
-          classStack.peek().memberSignatures.add(s"$name$value")
+          classStack.peek().memberSignatures.append(s"$name$value")
         }
       }
     }
@@ -134,7 +134,7 @@ class SignatureVisitor(
             " = " + vd.variableInitializer().getText
           else ""
         if (!classStack.isEmpty) {
-          classStack.peek().memberSignatures.add(s"$name$value")
+          classStack.peek().memberSignatures.append(s"$name$value")
         }
       }
     }
@@ -145,7 +145,7 @@ class SignatureVisitor(
     if (accessModifier.implied.contains(modifier)) {
       val name = ctx.identifier().getText
       if (!classStack.isEmpty) {
-        classStack.peek().memberSignatures.add(name)
+        classStack.peek().memberSignatures.append(name)
       }
     }
   }
@@ -158,13 +158,13 @@ class SignatureVisitor(
   ): Unit = {
     if (accessModifier.implied.contains(modifier)) {
       val signature = extractSignature(ctx, getBody)
-      val currentClass = ClassInfo()
+      val currentClass = ClassSignature()
       currentClass.signature = signature
 
       if (classStack.isEmpty) {
         topLevelClasses.add(currentClass)
       } else {
-        classStack.peek().innerClasses.add(currentClass)
+        classStack.peek().innerClasses.append(currentClass)
       }
       classStack.push(currentClass)
     }
@@ -177,7 +177,7 @@ class SignatureVisitor(
   ): Unit = {
     val signature = extractSignature(ctx, getBody)
     if (!classStack.isEmpty) {
-      classStack.peek().memberSignatures.add(signature)
+      classStack.peek().memberSignatures.append(signature)
     }
     ()
   }
