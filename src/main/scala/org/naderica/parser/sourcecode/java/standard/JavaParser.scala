@@ -2,21 +2,14 @@ package org.naderica.parser.sourcecode.java.standard
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.naderica.brix.sourcecode.ast.java.standard.Java20Lexer
-import org.naderica.brix.sourcecode.ast.java.standard.Java20Parser
+import org.naderica.parser.sourcecode.ast.java.standard.Java20Lexer
+import org.naderica.parser.sourcecode.ast.java.standard.Java20Parser
 
-@main class JavaParser {
-  def main(args: Array[String]): Unit = {
-    if (args.length != 1) {
-      System.err.println("Usage: JavaParser <path_to_java_file>")
-      return
-    }
-
-    println("Trying with visitor")
-    val filePath = args(0)
+class JavaParser() {
+  def main(sourceFilePath: String): Unit = {
 
     try {
-      val input = CharStreams.fromFileName(filePath)
+      val input = CharStreams.fromFileName(sourceFilePath)
       val lexer = new Java20Lexer(input)
       val tokens = new CommonTokenStream(lexer)
       val parser = new Java20Parser(tokens)
@@ -39,4 +32,10 @@ import org.naderica.brix.sourcecode.ast.java.standard.Java20Parser
     }
   }
 
+}
+
+@main
+def runJavaParser(pathToSourceFiles: String): Unit = {
+  val parser = new JavaParser()
+  parser.main(pathToSourceFiles)
 }

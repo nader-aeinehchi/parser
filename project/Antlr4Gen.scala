@@ -5,27 +5,23 @@ import scala.sys.process._
 object Antlr4Gen extends AutoPlugin {
   override def trigger = allRequirements
 
-  def firstNonCommentLine(file: File): Option[String] =
-    IO.readLines(file)
-      .find(line => line.trim.nonEmpty && !line.trim.startsWith("//"))
-
   lazy val antlr4GenerateAll = taskKey[Unit](
-    "Generate ANTLR4 sources for all .g4 files with -visitor -listener"
+    "Generate ANTLR4 sources for all .g4 files with -visitor -listener, preserving folder hierarchy"
   )
+
+  // Helper: first non-comment, non-empty line
+  def firstNonCommentLine(file: File): Option[String] =
+    IO.readLines(file).find(line => line.trim.nonEmpty && !line.trim.startsWith("//"))
 
   override lazy val projectSettings = Seq(
     antlr4GenerateAll := {
       val log = streams.value.log
       val antlrSrcDir = (Compile / sourceDirectory).value / "antlr4"
-      val outDir = (Compile / sourceManaged).value / "antlr4"
+      val outRoot = (Compile / sourceManaged).value / "antlr4"
 
-      // Use the downloaded ANTLR complete jar
-      val antlrCompleteJar =
-        baseDirectory.value / "lib" / "antlr-4.13.2-complete.jar"
+      val antlrCompleteJar = baseDirectory.value / "lib" / "antlr-4.13.2-complete.jar"
       if (!antlrCompleteJar.exists)
-        sys.error(
-          s"${antlrCompleteJar.getAbsolutePath} not found. Download it from https://www.antlr.org/download.html"
-        )
+        sys.error(s"${antlrCompleteJar.getAbsolutePath} not found. Download it from https://www.antlr.org/download.html")
 
       val classpath = antlrCompleteJar.getAbsolutePath
 
@@ -38,10 +34,13 @@ object Antlr4Gen extends AutoPlugin {
 
       val orderedFiles = lexerFiles ++ parserFiles
 
-      IO.createDirectory(outDir)
-
       orderedFiles.foreach { file =>
-        log.info(s"Generating sources for ${file.getName}")
+        // Compute relative path from antlrSrcDir
+        val relPath = IO.relativize(antlrSrcDir, file.getParentFile).getOrElse("")
+        val outDir = outRoot / relPath
+        IO.createDirectory(outDir)
+
+        log.info(s"Generating sources for ${file.getName} to $outDir")
         val cmd = Seq(
           "java",
           "-cp",

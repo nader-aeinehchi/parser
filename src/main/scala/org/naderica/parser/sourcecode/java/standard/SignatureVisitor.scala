@@ -15,7 +15,7 @@ class SignatureVisitor(val tokens: CommonTokenStream)
   private val classStack = new Stack[ClassInfo]()
   private val topLevelClasses = new ArrayList[ClassInfo]()
 
-  def visitNormalClassDeclaration(ctx: NormalClassDeclarationContext): Unit = {
+  override def visitNormalClassDeclaration(ctx: NormalClassDeclarationContext): Unit = {
 
     val classSignature = tokens
       .getText(

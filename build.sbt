@@ -4,14 +4,12 @@ lazy val root = (project in file("."))
       List(
         organization := "org.naderica",
         scalaVersion := "3.6.3"
-        // name := "parser"
       )
     ),
     name := "parser",
-    // Compile / compileOrder := CompileOrder.Mixed,
     resolvers ++= Seq(
-      Resolver.mavenLocal, // Looks for dependencies in your local Maven repository (~/.m2/repository)
-      "Maven Central" at "https://repo1.maven.org/maven2/" // The primary public Maven repository
+      Resolver.mavenLocal,
+      "Maven Central" at "https://repo1.maven.org/maven2/"
     ),
     libraryDependencies ++= {
       val junitV = "4.13.2"
@@ -29,6 +27,13 @@ lazy val root = (project in file("."))
         "org.antlr" % "antlr4" % "4.13.2"
       )
     },
+    Compile / unmanagedSourceDirectories ++= {
+      val managed = (Compile / sourceManaged).value / "antlr4"
+      Seq(managed)
+    },
+    Compile / unmanagedSourceDirectories ++= {
+      val managed = (Compile / sourceManaged).value / "antlr4"
+      Seq(managed)
+    },
     testOptions += Tests.Argument(TestFrameworks.JUnit, "-v")
   )
-
