@@ -17,7 +17,7 @@ class JavaParser() {
       val tree = parser.compilationUnit()
 
       // Create an instance of our custom visitor with the token stream.
-      val visitor = new SignatureVisitor(tokens)
+      val visitor = new SignatureVisitor(tokens, JavaAccessModifier.PACKAGE_PRIVATE)
 
       // Visit the parse tree to trigger the logic in our visitor.
       visitor.visit(tree)

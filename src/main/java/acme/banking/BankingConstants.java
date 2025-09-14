@@ -8,3 +8,4 @@ public enum BankingConstants {
 		return this.ordinal();
 	}
 }
+ 

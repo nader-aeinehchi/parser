@@ -12,4 +12,19 @@ package acme.banking;
  * @param balance is a float representing the current balance of the account.
  */
 public record Account(String id, String owner, float balance) {
+    public String getId() {
+        return id;
+    }
+
+    protected String getOwner() {
+        return owner; 
+    }
+
+    private String getBalanceString() {
+        return String.format("%.2f", balance);
+    }
+
+    String getDefault() {
+        return "Account ID: " + id + ", Owner: " + owner + ", Balance: $" + getBalanceString();
+    }   
 }

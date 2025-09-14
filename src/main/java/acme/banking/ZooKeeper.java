@@ -22,14 +22,25 @@ public final class ZooKeeper extends Zoo implements ZooKeeperInterface {
 		this.location = location;
 	}
 
-	public String washLion(String color, String age) {
+	public String publicSetter(String color, String age) {
 		return color + "-" + color + "  " + age + " age";
 	}
-	
-	
+
+	protected String protectedSetter(String color, String age) {
+		return color + "-" + color + "  " + age + " age";
+	}
+
+	String defaultSetter(String color, String age) {
+		return color + "-" + color + "  " + age + " age";
+	}
+
+	private String privateSetter(String color, String age) {
+		return color + "-" + color + "  " + age + " age";
+	}
+
 	static class InnerClass extends Zoo {
 		private void doSomeInternalOperation(int numberOfOperations) {
-			
+
 		}
 	}
 }
