@@ -21,10 +21,10 @@ class JavaParser() {
 
       // Visit the parse tree to trigger the logic in our visitor.
       visitor.visit(tree)
+      // SignatureFormatter.asText(visitor)
+      println("\n----- JSON Output -----\n")
+      SignatureFormatter.asJson(visitor)
 
-      for (classInfo <- visitor.getResult.asScala) {
-        println(classInfo)
-      }
     } catch {
       case e: Exception =>
         System.err.println(s"Error reading file: ${e.getMessage}")
@@ -48,7 +48,7 @@ def runJavaParser(pathToSourceFiles: String): Unit = {
       println(s"No .java files found in directory: $pathToSourceFiles")
     } else {
       javaFiles.foreach { f =>
-        println(s"Processing file: ${f.getAbsolutePath}")
+        // println(s"Processing file: ${f.getAbsolutePath}")
         parser.main(f.getAbsolutePath)
       }
     }

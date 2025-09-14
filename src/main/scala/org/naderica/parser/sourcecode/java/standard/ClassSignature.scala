@@ -26,4 +26,38 @@ class ClassSignature {
     }
     sb.toString
   }
+
+  // Add this method inside your ClassSignature class
+  def toJson: String = {
+    val membersJson =
+      memberSignatures.map(m => s""""$m"""").mkString("[", ",", "]")
+    val innerJson = innerClasses.map(_.toJson).mkString("[", ",", "]")
+    s"""{
+    "signature": "${signature.replace("\"", "\\\"")}",
+    "members": $membersJson,
+    "innerClasses": $innerJson
+  }"""
+  }
+
+  def toPrettyJson(indent: String = ""): String = {
+    val nextIndent = indent + "  "
+    val membersJson =
+      if (memberSignatures.isEmpty) "[]"
+      else
+        memberSignatures
+          .map(m => s"""$nextIndent  "$m"""")
+          .mkString("[\n", ",\n", s"\n$nextIndent]")
+    val innerJson =
+      if (innerClasses.isEmpty) "[]"
+      else
+        innerClasses
+          .map(_.toPrettyJson(nextIndent + "  "))
+          .mkString("[\n", ",\n", s"\n$nextIndent]")
+    s"""${indent}{
+${nextIndent}"signature": "${signature.replace("\"", "\\\"")}",
+${nextIndent}"members": $membersJson,
+${nextIndent}"innerClasses": $innerJson
+$indent}"""
+  }
+
 }

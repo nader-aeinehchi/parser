@@ -1,6 +1,7 @@
 package org.naderica.parser.sourcecode.java.standard
 
 import java.util.{ArrayList, List, Stack}
+
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.misc.Interval
 import org.antlr.v4.runtime.ParserRuleContext
@@ -15,7 +16,7 @@ class SignatureVisitor(
   private val classStack = new Stack[ClassSignature]()
   private val topLevelClasses = new ArrayList[ClassSignature]()
 
-  def getResult: List[ClassSignature] = topLevelClasses
+  def classSignatures()= topLevelClasses
 
   override def visitNormalClassDeclaration(
       ctx: NormalClassDeclarationContext
@@ -92,52 +93,21 @@ class SignatureVisitor(
   override def visitConstantDeclaration(
       ctx: ConstantDeclarationContext
   ): Unit = {
-    val modifier = extractAccessModifier(ctx.constantModifier())
-    if (accessModifier.implied.contains(modifier)) {
-      val varList = ctx.variableDeclaratorList()
-      import scala.jdk.CollectionConverters._
-      for (vd <- varList.variableDeclarator().asScala) {
-        val name = vd.variableDeclaratorId().getText
-        val value =
-          if (vd.variableInitializer() != null)
-            " = " + vd.variableInitializer().getText
-          else ""
-        val typeType = ctx.unannType().getText + " "
-
-        if (!classStack.isEmpty) {
-          classStack
-            .peek()
-            .memberSignatures
-            .append(s"${modifier.toModifier} $typeType$name$value")
-        }
-      }
-    }
+    extractAndAddFieldOrConstant(
+      extractAccessModifier(ctx.constantModifier()),
+      ctx.unannType().getText + " ",
+      ctx.variableDeclaratorList()
+    )
   }
 
   override def visitFieldDeclaration(
       ctx: FieldDeclarationContext
   ): Unit = {
-    val modifier = extractAccessModifier(ctx.fieldModifier())
-    if (accessModifier.implied.contains(modifier)) {
-      val varList = ctx.variableDeclaratorList()
-      import scala.jdk.CollectionConverters._
-      for (vd <- varList.variableDeclarator().asScala) {
-        val name = vd.variableDeclaratorId().getText
-        val value =
-          if (vd.variableInitializer() != null)
-            " = " + vd.variableInitializer().getText
-          else ""
-
-        val typeType = ctx.unannType().getText + " "
-
-        if (!classStack.isEmpty) {
-          classStack
-            .peek()
-            .memberSignatures
-            .append(s"${modifier.toModifier} $typeType$name$value")
-        }
-      }
-    }
+    extractAndAddFieldOrConstant(
+      extractAccessModifier(ctx.fieldModifier()),
+      ctx.unannType().getText + " ",
+      ctx.variableDeclaratorList()
+    )
   }
 
   override def visitEnumConstant(ctx: EnumConstantContext): Unit = {
@@ -220,4 +190,29 @@ class SignatureVisitor(
     else if (mods.contains("public")) JavaAccessModifier.PUBLIC
     else JavaAccessModifier.PACKAGE_PRIVATE
   }
+
+// Helper for both constant and field declarations
+  private def extractAndAddFieldOrConstant(
+      modifier: JavaAccessModifier,
+      typeText: String,
+      varList: VariableDeclaratorListContext
+  ): Unit = {
+    if (accessModifier.implied.contains(modifier)) {
+      import scala.jdk.CollectionConverters._
+      for (vd <- varList.variableDeclarator().asScala) {
+        val name = vd.variableDeclaratorId().getText
+        val value =
+          if (vd.variableInitializer() != null)
+            " = " + vd.variableInitializer().getText
+          else ""
+        if (!classStack.isEmpty) {
+          classStack
+            .peek()
+            .memberSignatures
+            .append(s"${modifier.toModifier} $typeText$name$value")
+        }
+      }
+    }
+  }
+
 }
