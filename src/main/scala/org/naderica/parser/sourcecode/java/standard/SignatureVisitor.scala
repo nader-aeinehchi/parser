@@ -1,9 +1,6 @@
 package org.naderica.parser.sourcecode.java.standard
 
-import java.util.ArrayList
-import java.util.List
-import java.util.Stack
-
+import java.util.{ArrayList, List, Stack}
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.misc.Interval
 import org.naderica.parser.sourcecode.ast.java.standard.Java20Parser.*
@@ -15,12 +12,50 @@ class SignatureVisitor(val tokens: CommonTokenStream)
   private val classStack = new Stack[ClassInfo]()
   private val topLevelClasses = new ArrayList[ClassInfo]()
 
+  def getResult: List[ClassInfo] = topLevelClasses
+
   override def visitNormalClassDeclaration(
       ctx: NormalClassDeclarationContext
   ): Unit = {
-    val classSignature = extractSignature(ctx, _.classBody())
+    handleTopLevelConstruct(ctx, _.classBody())
+    super.visitNormalClassDeclaration(ctx)
+  }
+
+  override def visitNormalInterfaceDeclaration(
+      ctx: NormalInterfaceDeclarationContext
+  ): Unit = {
+    handleTopLevelConstruct(ctx, _.interfaceBody())
+    super.visitNormalInterfaceDeclaration(ctx)
+  }
+
+  override def visitEnumDeclaration(
+      ctx: EnumDeclarationContext
+  ): Unit = {
+    handleTopLevelConstruct(ctx, _.enumBody())
+    super.visitEnumDeclaration(ctx)
+  }
+
+  override def visitRecordDeclaration(
+      ctx: RecordDeclarationContext
+  ): Unit = {
+    handleTopLevelConstruct(ctx, _.recordBody())
+    super.visitRecordDeclaration(ctx)
+  }
+
+  override def visitMethodDeclaration(ctx: MethodDeclarationContext): Unit =
+    extractAndAddMemberSignature(ctx, _.methodBody())
+
+  override def visitConstructorDeclaration(ctx: ConstructorDeclarationContext): Unit =
+    extractAndAddMemberSignature(ctx, _.constructorBody())
+
+  /** Helper to handle top-level constructs (class, interface, enum, record) */
+  private def handleTopLevelConstruct[C](
+      ctx: C,
+      getBody: C => org.antlr.v4.runtime.ParserRuleContext
+  ): Unit = {
+    val signature = extractSignature(ctx, getBody)
     val currentClass = ClassInfo()
-    currentClass.signature = classSignature
+    currentClass.signature = signature
 
     if (classStack.isEmpty) {
       topLevelClasses.add(currentClass)
@@ -28,32 +63,21 @@ class SignatureVisitor(val tokens: CommonTokenStream)
       classStack.peek().innerClasses.add(currentClass)
     }
     classStack.push(currentClass)
-    super.visitNormalClassDeclaration(ctx)
   }
 
-  override def visitMethodDeclaration(ctx: MethodDeclarationContext): Unit = {
-    val methodSignature = extractSignature(ctx, _.methodBody())
-    if (!classStack.isEmpty) {
-      classStack.peek().memberSignatures.add(methodSignature)
-    }
-    ()
-  }
-
-  override def visitConstructorDeclaration(
-      ctx: ConstructorDeclarationContext
+  /** Helper to extract and add member signature */
+  private def extractAndAddMemberSignature[C](
+      ctx: C,
+      getBody: C => org.antlr.v4.runtime.ParserRuleContext
   ): Unit = {
-    val constructorSignature = extractSignature(ctx, _.constructorBody())
+    val signature = extractSignature(ctx, getBody)
     if (!classStack.isEmpty) {
-      classStack.peek().memberSignatures.add(constructorSignature)
+      classStack.peek().memberSignatures.add(signature)
     }
     ()
   }
 
-  def getResult: List[ClassInfo] = topLevelClasses
-
-  /** Helper to extract the signature text from a context up to the start of its
-    * body.
-    */
+  /** Helper to extract the signature text from a context up to the start of its body. */
   private def extractSignature[C](
       ctx: C,
       getBody: C => org.antlr.v4.runtime.ParserRuleContext
@@ -61,14 +85,10 @@ class SignatureVisitor(val tokens: CommonTokenStream)
     tokens
       .getText(
         new Interval(
-          ctx
-            .asInstanceOf[org.antlr.v4.runtime.ParserRuleContext]
-            .start
-            .getTokenIndex,
+          ctx.asInstanceOf[org.antlr.v4.runtime.ParserRuleContext].start.getTokenIndex,
           getBody(ctx).start.getTokenIndex - 1
         )
       )
       .trim
   }
-
 }
