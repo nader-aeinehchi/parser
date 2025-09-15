@@ -22,7 +22,7 @@ class JavaParser() {
       // Visit the parse tree to trigger the logic in our visitor.
       visitor.visit(tree)
       // SignatureFormatter.asText(visitor)
-      println("\n----- JSON Output -----\n")
+      // println("\n----- JSON Output -----\n")
       SignatureFormatter.asJson(visitor)
 
     } catch {

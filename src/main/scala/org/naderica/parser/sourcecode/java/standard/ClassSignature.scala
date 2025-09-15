@@ -45,6 +45,7 @@ class ClassSignature {
       if (memberSignatures.isEmpty) "[]"
       else
         memberSignatures
+          .map(escapeQuotes)
           .map(m => s"""$nextIndent  "$m"""")
           .mkString("[\n", ",\n", s"\n$nextIndent]")
     val innerJson =
@@ -53,11 +54,14 @@ class ClassSignature {
         innerClasses
           .map(_.toPrettyJson(nextIndent + "  "))
           .mkString("[\n", ",\n", s"\n$nextIndent]")
+
     s"""${indent}{
-${nextIndent}"signature": "${signature.replace("\"", "\\\"")}",
-${nextIndent}"members": $membersJson,
-${nextIndent}"innerClasses": $innerJson
-$indent}"""
+        ${nextIndent}"signature": "${signature.replace("\"", "\\\"")}",
+        ${nextIndent}"members": $membersJson,
+        ${nextIndent}"innerClasses": $innerJson
+        $indent}"""
   }
+
+  private val escapeQuotes: String => String = _.replace("\"", "\\\"")
 
 }

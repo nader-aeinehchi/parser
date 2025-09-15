@@ -28,7 +28,7 @@ interface AcmeBankingService {
 	 * @param balance is a float representing the current balance of the account.
 	 */
 
-	public Account publicCreateAccount(String id, String owner, float balance);
+	public Account createAccount(String id, String owner, float balance);
 
 	/**
 	 * Retrieves a bank account by its unique identifier.
