@@ -16,7 +16,7 @@ class SignatureVisitor(
   private val classStack = new Stack[ClassSignature]()
   private val topLevelClasses = new ArrayList[ClassSignature]()
 
-  def classSignatures()= topLevelClasses
+  def classSignatures() = topLevelClasses
 
   override def visitNormalClassDeclaration(
       ctx: NormalClassDeclarationContext
@@ -208,7 +208,7 @@ class SignatureVisitor(
         if (!classStack.isEmpty) {
           classStack
             .peek()
-            .memberSignatures
+            .fieldSignatures
             .append(s"${modifier.toModifier} $typeText$name$value")
         }
       }
