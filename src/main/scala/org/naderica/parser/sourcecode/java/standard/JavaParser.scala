@@ -34,24 +34,26 @@ class JavaParser() {
 }
 
 @main
-def runJavaParser(pathToSourceFiles: String): Unit = {
+def runJavaParser(pathToSourceFiles: String, recursive: Boolean = false): Unit = {
 
   // Clear terminal (ANSI escape code)
   print("\u001b[2J\u001b[H")
 
   val parser = new JavaParser()
   val file = new java.io.File(pathToSourceFiles)
-  if (file.isDirectory) {
-    val javaFiles =
-      file.listFiles().filter(f => f.isFile && f.getName.endsWith(".java"))
-    if (javaFiles.isEmpty) {
-      println(s"No .java files found in directory: $pathToSourceFiles")
-    } else {
-      javaFiles.foreach { f =>
-        // println(s"Processing file: ${f.getAbsolutePath}")
-        parser.main(f.getAbsolutePath)
+
+  def processDir(dir: java.io.File): Unit = {
+    val files = dir.listFiles()
+    if (files != null) {
+      files.foreach { f =>
+        if (f.isDirectory && recursive) processDir(f)
+        else if (f.isFile && f.getName.endsWith(".java")) parser.main(f.getAbsolutePath)
       }
     }
+  }
+
+  if (file.isDirectory) {
+    processDir(file)
   } else if (file.isFile && file.getName.endsWith(".java")) {
     parser.main(pathToSourceFiles)
   } else {
@@ -60,3 +62,32 @@ def runJavaParser(pathToSourceFiles: String): Unit = {
     )
   }
 }
+
+
+
+// def runJavaParser(pathToSourceFiles: String, recursive: Boolean = false): Unit = {
+
+//   // Clear terminal (ANSI escape code)
+//   print("\u001b[2J\u001b[H")
+
+//   val parser = new JavaParser()
+//   val file = new java.io.File(pathToSourceFiles)
+//   if (file.isDirectory) {
+//     val javaFiles =
+//       file.listFiles().filter(f => f.isFile && f.getName.endsWith(".java"))
+//     if (javaFiles.isEmpty) {
+//       println(s"No .java files found in directory: $pathToSourceFiles")
+//     } else {
+//       javaFiles.foreach { f =>
+//         // println(s"Processing file: ${f.getAbsolutePath}")
+//         parser.main(f.getAbsolutePath)
+//       }
+//     }
+//   } else if (file.isFile && file.getName.endsWith(".java")) {
+//     parser.main(pathToSourceFiles)
+//   } else {
+//     println(
+//       s"Provided path is not a .java file or directory: $pathToSourceFiles"
+//     )
+//   }
+// }
