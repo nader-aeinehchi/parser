@@ -17,7 +17,7 @@ class SignatureVisitor(
   private val classStack = new Stack[ClassSignature]()
   private val topLevelClasses = new ArrayList[ClassSignature]()
   private var currentPackageSignature: String = ""
-  private var currentPackageName: String = ""
+  // private var currentPackageName: String = ""
 
   def classSignatures() = topLevelClasses
 
@@ -34,7 +34,7 @@ class SignatureVisitor(
 
 // Store packageSignature and packageName for later use
     this.currentPackageSignature = packageSignature
-    this.currentPackageName = packageName
+    // this.currentPackageName = packageName
     // println(packageSignature) // or store it as needed
 
     super.visitPackageDeclaration(ctx)
@@ -153,7 +153,7 @@ class SignatureVisitor(
       val currentClass = ClassSignature()
       currentClass.signature = signature
       currentClass.packageSignature = currentPackageSignature
-      currentClass.packageName = currentPackageName
+      // currentClass.packageName = currentPackageName
 
       if (classStack.isEmpty) {
         topLevelClasses.add(currentClass)

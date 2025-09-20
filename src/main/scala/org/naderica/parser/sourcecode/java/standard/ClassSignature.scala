@@ -1,11 +1,12 @@
 package org.naderica.parser.sourcecode.java.standard
 
 import scala.collection.mutable.ListBuffer
+import scala.collection.immutable.ListMap
 
 /** A simple data structure to hold a class's signature and its members. */
 class ClassSignature {
   var packageSignature: String = ""
-  var packageName: String = ""
+  // var packageName: String = ""
   var signature: String = ""
   val fieldSignatures: ListBuffer[String] = ListBuffer.empty
   val memberSignatures: ListBuffer[String] = ListBuffer.empty
@@ -32,66 +33,57 @@ class ClassSignature {
 
     if (innerClasses.nonEmpty) {
       sb.append("\tInner Classes:\n")
-      innerClasses.foreach { inner =>
-        sb.append("\t- " + inner.toString + "\n")
+      innerClasses.foreach { innerclass =>
+        sb.append("\t- " + innerclass.toString + "\n")
       }
     }
     sb.toString
   }
 
-  // Add this method inside your ClassSignature class
-  def toJson: String = {
-    val membersJson =
-      memberSignatures.map(m => s""""$m"""").mkString("[", ",", "]")
+  def toJson(): String = {
 
-    val fieldsJson =
-      fieldSignatures.map(m => s""""$m"""").mkString("[", ",", "]")
-
-    val innerJson = innerClasses.map(_.toJson).mkString("[", ",", "]")
-
-    s"""{
-    "package": "${packageName.replace("\"", "\\\"")}",
-    "signature": "${signature.replace("\"", "\\\"")}",
-    "fields": $fieldsJson,
-    "members": $membersJson,
-    "innerClasses": $innerJson
-    }"""
-  }
-
-  def toPrettyJson(indent: String = ""): String = {
-    val nextIndent = indent + "  "
+    val packageJson = s""""package": "$packageSignature""""
+    val signatureJson = s""""signature": "$signature""""
 
     val membersJson =
-      if (memberSignatures.isEmpty) "[]"
-      else
-        memberSignatures
-          .map(escapeQuotes)
-          .map(m => s"""$nextIndent  "$m"""")
-          .mkString("[\n", ",\n", s"\n$nextIndent]")
-
+      memberSignatures.map(m => entry(m)).mkString("[", ",", "]")
     val fieldsJson =
-      if (fieldSignatures.isEmpty) "[]"
-      else
-        fieldSignatures
-          .map(escapeQuotes)
-          .map(m => s"""$nextIndent  "$m"""")
-          .mkString("[\n", ",\n", s"\n$nextIndent]")
+      fieldSignatures.map(m => entry(m)).mkString("[", ",", "]")
 
-    val innerJson =
-      if (innerClasses.isEmpty) "[]"
-      else
-        innerClasses
-          .map(_.toPrettyJson(nextIndent + "  "))
-          .mkString("[\n", ",\n", s"\n$nextIndent]")
+    val innerClassJson =
+      innerClasses.map(((_.toJson()))).mkString("[", ",", "]")
 
-    s"""${indent}{
-        ${nextIndent}"package": "${packageName.replace("\"", "\\\"")}",
-        ${nextIndent}"signature": "${signature.replace("\"", "\\\"")}",
-        ${nextIndent}"fields": $fieldsJson,
-        ${nextIndent}"members": $membersJson,
-        ${nextIndent}"innerClasses": $innerJson
-        $indent}"""
+    val cleanedPackage = entry(packageSignature)
+    val cleanedSignature = entry(signature)
+
+    val finalJson = ListMap(
+      "package:" -> cleanedPackage,
+      "signature:" -> cleanedSignature,
+      "fields:" -> fieldsJson,
+      "members:" -> membersJson,
+      "innerClasses:" -> innerClassJson
+    )
+
+    finalJson
+      .map { case (k, v) => s""""$k": $v""" }
+      .mkString("{\n  ", ",\n  ", "\n}")
+
   }
+
+  private def wrapInQuotes(s: String): String = "\"" + s + "\""
+
+  private def removeControlChars(s: String): String =
+    s.replaceAll("[\\n\\t\\r\\f\\u0008]", "")
+      .replaceAll("\\s{2,}", " ") // Replace multiple spaces with a single space
+      .trim // Remove leading and trailing spaces
+
+  private def entry(s: String): String = wrapInQuotes(removeControlChars(s))
+
+  private def escapeJsonString(s: String): String =
+    s.flatMap {
+      case '"' => "\""
+      case c   => c.toString
+    }
 
   private val escapeQuotes: String => String = _.replace("\"", "\\\"")
 

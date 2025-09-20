@@ -9,4 +9,16 @@ public class PaymentImpl implements Payment {
         from.withdraw(amount);
         to.deposit(amount);
     }
+
+    private static final class CreditScore {
+        private final int score;
+
+        private CreditScore(int score) {
+            this.score = score;
+        }
+
+        public int getScore() {
+            return score;
+        }
+    }
 }
