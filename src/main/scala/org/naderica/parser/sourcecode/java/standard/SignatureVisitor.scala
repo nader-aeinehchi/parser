@@ -1,6 +1,7 @@
 package org.naderica.parser.sourcecode.java.standard
 
 import java.util.{ArrayList, List, Stack}
+import scala.jdk.CollectionConverters._
 
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.misc.Interval
@@ -15,8 +16,29 @@ class SignatureVisitor(
 
   private val classStack = new Stack[ClassSignature]()
   private val topLevelClasses = new ArrayList[ClassSignature]()
+  private var currentPackageSignature: String = ""
+  private var currentPackageName: String = ""
 
   def classSignatures() = topLevelClasses
+
+  override def visitPackageDeclaration(ctx: PackageDeclarationContext): Unit = {
+    import scala.jdk.CollectionConverters._
+
+    val modifier = extractAccessModifier(ctx.packageModifier())
+    val packageName = ctx.identifier().asScala.map(_.getText).mkString(".")
+    val packageSignature =
+      if (modifier == JavaAccessModifier.PACKAGE_PRIVATE)
+        s"package $packageName;"
+      else
+        s"package ${modifier.toString.toLowerCase} $packageName;"
+
+// Store packageSignature and packageName for later use
+    this.currentPackageSignature = packageSignature
+    this.currentPackageName = packageName
+    // println(packageSignature) // or store it as needed
+
+    super.visitPackageDeclaration(ctx)
+  }
 
   override def visitNormalClassDeclaration(
       ctx: NormalClassDeclarationContext
@@ -130,6 +152,8 @@ class SignatureVisitor(
       val signature = extractSignature(ctx, getBody)
       val currentClass = ClassSignature()
       currentClass.signature = signature
+      currentClass.packageSignature = currentPackageSignature
+      currentClass.packageName = currentPackageName
 
       if (classStack.isEmpty) {
         topLevelClasses.add(currentClass)

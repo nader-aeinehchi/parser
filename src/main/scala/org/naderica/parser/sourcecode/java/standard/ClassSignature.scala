@@ -4,6 +4,8 @@ import scala.collection.mutable.ListBuffer
 
 /** A simple data structure to hold a class's signature and its members. */
 class ClassSignature {
+  var packageSignature: String = ""
+  var packageName: String = ""
   var signature: String = ""
   val fieldSignatures: ListBuffer[String] = ListBuffer.empty
   val memberSignatures: ListBuffer[String] = ListBuffer.empty
@@ -11,7 +13,8 @@ class ClassSignature {
 
   override def toString: String = {
     val sb = new StringBuilder
-    sb.append(s"Class Signature:\n    $signature\n")
+
+    sb.append(s"Class Signature:\n $packageSignature \n $signature\n")
 
     if (memberSignatures.nonEmpty) {
       sb.append("\tMembers:\n")
@@ -47,6 +50,7 @@ class ClassSignature {
     val innerJson = innerClasses.map(_.toJson).mkString("[", ",", "]")
 
     s"""{
+    "package": "${packageName.replace("\"", "\\\"")}",
     "signature": "${signature.replace("\"", "\\\"")}",
     "fields": $fieldsJson,
     "members": $membersJson,
@@ -81,6 +85,7 @@ class ClassSignature {
           .mkString("[\n", ",\n", s"\n$nextIndent]")
 
     s"""${indent}{
+        ${nextIndent}"package": "${packageName.replace("\"", "\\\"")}",
         ${nextIndent}"signature": "${signature.replace("\"", "\\\"")}",
         ${nextIndent}"fields": $fieldsJson,
         ${nextIndent}"members": $membersJson,
