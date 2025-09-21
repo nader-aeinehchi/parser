@@ -88,7 +88,7 @@ class SignatureVisitor(
   override def visitMethodDeclaration(ctx: MethodDeclarationContext): Unit = {
     val modifier = extractAccessModifier(ctx.methodModifier())
     if (accessModifier.implied.contains(modifier)) {
-      extractAndAddMemberSignature(ctx, _.methodBody())
+      extractAndAddMethodSignature(ctx, _.methodBody())
     }
   }
 
@@ -99,7 +99,7 @@ class SignatureVisitor(
   ): Unit = {
     val modifier = extractAccessModifier(ctx.interfaceMethodModifier())
     if (accessModifier.implied.contains(modifier)) {
-      extractAndAddMemberSignature(ctx, _.methodBody())
+      extractAndAddMethodSignature(ctx, _.methodBody())
     }
   }
 
@@ -108,7 +108,7 @@ class SignatureVisitor(
   ): Unit = {
     val modifier = extractAccessModifier(ctx.constructorModifier())
     if (accessModifier.implied.contains(modifier)) {
-      extractAndAddMemberSignature(ctx, _.constructorBody())
+      extractAndAddMethodSignature(ctx, _.constructorBody())
     }
   }
 
@@ -137,7 +137,7 @@ class SignatureVisitor(
     if (accessModifier.implied.contains(modifier)) {
       val name = ctx.identifier().getText
       if (!classStack.isEmpty) {
-        classStack.peek().memberSignatures.append(name)
+        classStack.peek().methodSignatures.append(name)
       }
     }
   }
@@ -164,14 +164,14 @@ class SignatureVisitor(
     }
   }
 
-  /** Helper to extract and add member signature */
-  private def extractAndAddMemberSignature[C](
+  /** Helper to extract and add method signature */
+  private def extractAndAddMethodSignature[C](
       ctx: C,
       getBody: C => org.antlr.v4.runtime.ParserRuleContext
   ): Unit = {
     val signature = extractSignature(ctx, getBody)
     if (!classStack.isEmpty) {
-      classStack.peek().memberSignatures.append(signature)
+      classStack.peek().methodSignatures.append(signature)
     }
     ()
   }

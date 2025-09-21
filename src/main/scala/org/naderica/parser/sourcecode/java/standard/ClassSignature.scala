@@ -3,13 +3,13 @@ package org.naderica.parser.sourcecode.java.standard
 import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.ListMap
 
-/** A simple data structure to hold a class's signature and its members. */
+/** A simple data structure to hold a class's signature and its methods. */
 class ClassSignature {
   var packageSignature: String = ""
   // var packageName: String = ""
   var signature: String = ""
   val fieldSignatures: ListBuffer[String] = ListBuffer.empty
-  val memberSignatures: ListBuffer[String] = ListBuffer.empty
+  val methodSignatures: ListBuffer[String] = ListBuffer.empty
   val innerClasses: ListBuffer[ClassSignature] = ListBuffer.empty
 
   override def toString: String = {
@@ -17,10 +17,10 @@ class ClassSignature {
 
     sb.append(s"Class Signature:\n $packageSignature \n $signature\n")
 
-    if (memberSignatures.nonEmpty) {
-      sb.append("\tMembers:\n")
-      memberSignatures.foreach { member =>
-        sb.append(s"\t    - $member\n")
+    if (methodSignatures.nonEmpty) {
+      sb.append("\tMethods:\n")
+      methodSignatures.foreach { method =>
+        sb.append(s"\t    - $method\n")
       }
     }
 
@@ -40,13 +40,22 @@ class ClassSignature {
     sb.toString
   }
 
+  /** Produce a JSON representation of the ClassSignature.
+    *
+    * <pre> { "package:" : "<package_name>", "className:" : "<class_name>",
+    * "fields:" : [<field_list>], "methods:" : [ <method_list> ],
+    * "innerClasses:" : [ { "package:" : "<inner_class_package>", "className:" :
+    * "<inner_class_name>", "fields:" : [ <inner_class_field_list> ], "methods:"
+    * : [ <inner_class_method_list> ], "innerClasses:" : [ ] } ] } </pre>
+    */
+
   def toJson(): String = {
 
     val packageJson = s""""package": "$packageSignature""""
     val signatureJson = s""""signature": "$signature""""
 
-    val membersJson =
-      memberSignatures.map(m => entry(m)).mkString("[", ",", "]")
+    val methodsJson =
+      methodSignatures.map(m => entry(m)).mkString("[", ",", "]")
     val fieldsJson =
       fieldSignatures.map(m => entry(m)).mkString("[", ",", "]")
 
@@ -58,9 +67,9 @@ class ClassSignature {
 
     val finalJson = ListMap(
       "package:" -> cleanedPackage,
-      "signature:" -> cleanedSignature,
+      "className:" -> cleanedSignature,
       "fields:" -> fieldsJson,
-      "members:" -> membersJson,
+      "methods:" -> methodsJson,
       "innerClasses:" -> innerClassJson
     )
 
