@@ -11,7 +11,7 @@ import org.naderica.parser.sourcecode.ast.java.standard.Java20ParserBaseVisitor
 
 class SignatureVisitor(
     val tokens: CommonTokenStream,
-    val accessModifier: JavaAccessModifier = JavaAccessModifier.PUBLIC
+    val jModifier: JModifier = JModifier.PUBLIC
 ) extends Java20ParserBaseVisitor[Unit] {
 
   private val classStack = new Stack[ClassSignature]()
@@ -24,10 +24,10 @@ class SignatureVisitor(
   override def visitPackageDeclaration(ctx: PackageDeclarationContext): Unit = {
     import scala.jdk.CollectionConverters._
 
-    val modifier = extractAccessModifier(ctx.packageModifier())
+    val modifier = extractJModifier(ctx.packageModifier())
     val packageName = ctx.identifier().asScala.map(_.getText).mkString(".")
     val packageSignature =
-      if (modifier == JavaAccessModifier.PACKAGE_PRIVATE)
+      if (modifier == JModifier.PACKAGE_PRIVATE)
         s"package $packageName;"
       else
         s"package ${modifier.toString.toLowerCase} $packageName;"
@@ -47,7 +47,7 @@ class SignatureVisitor(
     handleTopLevelConstruct(
       ctx,
       _.classBody(),
-      extractAccessModifier(ctx.classModifier())
+      extractJModifier(ctx.classModifier())
     )
     super.visitNormalClassDeclaration(ctx)
   }
@@ -58,7 +58,7 @@ class SignatureVisitor(
     handleTopLevelConstruct(
       ctx,
       _.interfaceBody(),
-      extractAccessModifier(ctx.interfaceModifier())
+      extractJModifier(ctx.interfaceModifier())
     )
     super.visitNormalInterfaceDeclaration(ctx)
   }
@@ -69,7 +69,7 @@ class SignatureVisitor(
     handleTopLevelConstruct(
       ctx,
       _.enumBody(),
-      extractAccessModifier(ctx.classModifier())
+      extractJModifier(ctx.classModifier())
     )
     super.visitEnumDeclaration(ctx)
   }
@@ -80,14 +80,14 @@ class SignatureVisitor(
     handleTopLevelConstruct(
       ctx,
       _.recordBody(),
-      extractAccessModifier(ctx.classModifier())
+      extractJModifier(ctx.classModifier())
     )
     super.visitRecordDeclaration(ctx)
   }
 
   override def visitMethodDeclaration(ctx: MethodDeclarationContext): Unit = {
-    val modifier = extractAccessModifier(ctx.methodModifier())
-    if (accessModifier.implied.contains(modifier)) {
+    val modifier = extractJModifier(ctx.methodModifier())
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
       extractAndAddMethodSignature(ctx, _.methodBody())
     }
   }
@@ -97,8 +97,8 @@ class SignatureVisitor(
   override def visitInterfaceMethodDeclaration(
       ctx: InterfaceMethodDeclarationContext
   ): Unit = {
-    val modifier = extractAccessModifier(ctx.interfaceMethodModifier())
-    if (accessModifier.implied.contains(modifier)) {
+    val modifier = extractJModifier(ctx.interfaceMethodModifier())
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
       extractAndAddMethodSignature(ctx, _.methodBody())
     }
   }
@@ -106,8 +106,8 @@ class SignatureVisitor(
   override def visitConstructorDeclaration(
       ctx: ConstructorDeclarationContext
   ): Unit = {
-    val modifier = extractAccessModifier(ctx.constructorModifier())
-    if (accessModifier.implied.contains(modifier)) {
+    val modifier = extractJModifier(ctx.constructorModifier())
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
       extractAndAddMethodSignature(ctx, _.constructorBody())
     }
   }
@@ -116,7 +116,7 @@ class SignatureVisitor(
       ctx: ConstantDeclarationContext
   ): Unit = {
     extractAndAddFieldOrConstant(
-      extractAccessModifier(ctx.constantModifier()),
+      extractJModifier(ctx.constantModifier()),
       ctx.unannType().getText + " ",
       ctx.variableDeclaratorList()
     )
@@ -126,15 +126,15 @@ class SignatureVisitor(
       ctx: FieldDeclarationContext
   ): Unit = {
     extractAndAddFieldOrConstant(
-      extractAccessModifier(ctx.fieldModifier()),
+      extractJModifier(ctx.fieldModifier()),
       ctx.unannType().getText + " ",
       ctx.variableDeclaratorList()
     )
   }
 
   override def visitEnumConstant(ctx: EnumConstantContext): Unit = {
-    val modifier = extractAccessModifier(ctx.enumConstantModifier())
-    if (accessModifier.implied.contains(modifier)) {
+    val modifier = extractJModifier(ctx.enumConstantModifier())
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
       val name = ctx.identifier().getText
       if (!classStack.isEmpty) {
         classStack.peek().methodSignatures.append(name)
@@ -146,9 +146,9 @@ class SignatureVisitor(
   private def handleTopLevelConstruct[C](
       ctx: C,
       getBody: C => org.antlr.v4.runtime.ParserRuleContext,
-      modifier: JavaAccessModifier
+      modifier: JModifier
   ): Unit = {
-    if (accessModifier.implied.contains(modifier)) {
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
       val signature = extractSignature(ctx, getBody)
       val currentClass = ClassSignature()
       currentClass.signature = signature
@@ -199,9 +199,9 @@ class SignatureVisitor(
   /** Extracts the access modifier from a list of modifier contexts. You may
     * need to adapt this to your grammar.
     */
-  private def extractAccessModifier(
+  private def extractJModifier(
       modifiers: java.util.List[?]
-  ): JavaAccessModifier = {
+  ): JModifier = {
     import scala.jdk.CollectionConverters._
 
     val mods = modifiers.asScala.map {
@@ -209,19 +209,19 @@ class SignatureVisitor(
       case other                  => other.toString
     }
 
-    if (mods.contains("private")) JavaAccessModifier.PRIVATE
-    else if (mods.contains("protected")) JavaAccessModifier.PROTECTED
-    else if (mods.contains("public")) JavaAccessModifier.PUBLIC
-    else JavaAccessModifier.PACKAGE_PRIVATE
+    if (mods.contains("private")) JModifier.PRIVATE
+    else if (mods.contains("protected")) JModifier.PROTECTED
+    else if (mods.contains("public")) JModifier.PUBLIC
+    else JModifier.PACKAGE_PRIVATE
   }
 
 // Helper for both constant and field declarations
   private def extractAndAddFieldOrConstant(
-      modifier: JavaAccessModifier,
+      modifier: JModifier,
       typeText: String,
       varList: VariableDeclaratorListContext
   ): Unit = {
-    if (accessModifier.implied.contains(modifier)) {
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
       import scala.jdk.CollectionConverters._
       for (vd <- varList.variableDeclarator().asScala) {
         val name = vd.variableDeclaratorId().getText
@@ -233,7 +233,7 @@ class SignatureVisitor(
           classStack
             .peek()
             .fieldSignatures
-            .append(s"${modifier.toModifier} $typeText$name$value")
+            .append(s"${modifier.toString} $typeText$name$value")
         }
       }
     }

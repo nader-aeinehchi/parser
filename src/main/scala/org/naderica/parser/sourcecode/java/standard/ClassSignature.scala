@@ -86,7 +86,9 @@ class ClassSignature {
       .replaceAll("\\s{2,}", " ") // Replace multiple spaces with a single space
       .trim // Remove leading and trailing spaces
 
-  private def entry(s: String): String = wrapInQuotes(removeControlChars(s))
+  private def entry(s: String): String = wrapInQuotes(
+    escapeQuotes(removeControlChars(s))
+  )
 
   private def escapeJsonString(s: String): String =
     s.flatMap {
