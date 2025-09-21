@@ -62,32 +62,3 @@ def runJavaParser(pathToSourceFiles: String, recursive: Boolean = false): Unit =
     )
   }
 }
-
-
-
-// def runJavaParser(pathToSourceFiles: String, recursive: Boolean = false): Unit = {
-
-//   // Clear terminal (ANSI escape code)
-//   print("\u001b[2J\u001b[H")
-
-//   val parser = new JavaParser()
-//   val file = new java.io.File(pathToSourceFiles)
-//   if (file.isDirectory) {
-//     val javaFiles =
-//       file.listFiles().filter(f => f.isFile && f.getName.endsWith(".java"))
-//     if (javaFiles.isEmpty) {
-//       println(s"No .java files found in directory: $pathToSourceFiles")
-//     } else {
-//       javaFiles.foreach { f =>
-//         // println(s"Processing file: ${f.getAbsolutePath}")
-//         parser.main(f.getAbsolutePath)
-//       }
-//     }
-//   } else if (file.isFile && file.getName.endsWith(".java")) {
-//     parser.main(pathToSourceFiles)
-//   } else {
-//     println(
-//       s"Provided path is not a .java file or directory: $pathToSourceFiles"
-//     )
-//   }
-// }
