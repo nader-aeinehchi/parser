@@ -1,5 +1,3 @@
-
-
 # draw.io
 **/*.bkp
 
@@ -16,32 +14,36 @@ dist/*
 target/
 lib_managed/
 src_managed/
-
-# Ignore the contents of the 'project/' directory, not the directory itself.
-project/*
-
-# Ignore specific files and subdirectories inside 'project/'.
-# This now works because Git is still scanning the directory.
-!project/*.scala
-project/boot/
-project/plugins/project/
-project/local-plugins.sbt
-
-
+.sbt-scripted/
+local.sbt
 .history
 .ensime
 .ensime_cache/
-.sbt-scripted/
-local.sbt
 
-*.class
-*.log
 
 .cache
 .lib/
 target/
 **/.bloop
 .bsp/
+
+# compiled class files
+*.class
+# log files
+*.log
+
+
+# Ignore the contents of the 'project/' directory, not the directory itself.
+project/*
+# Ignore specific files and subdirectories inside 'project/'.
+# This now works because Git is still scanning the directory.
+!project/*.scala
+!project/plugins.sbt
+
+project/boot/
+project/plugins/project/
+project/local-plugins.sbt
+
 
 # VS Code
 .vscode/
