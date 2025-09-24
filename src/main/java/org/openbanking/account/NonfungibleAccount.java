@@ -1,6 +1,6 @@
 package org.openbanking.account;
 
-class NonfungibleAccount {
+public class NonfungibleAccount {
 	private String id = "007";
 	String owner = "Mr Bond";
 	protected float balance = 0.0f;
