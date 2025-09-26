@@ -149,9 +149,9 @@ class SignatureVisitor(
       modifier: JModifier
   ): Unit = {
     if (jModifier.isMoreRestrictiveThan(modifier)) {
-      val signature = extractSignature(ctx, getBody)
+      val classSignature = extractSignature(ctx, getBody)
       val currentClass = ClassSignature()
-      currentClass.signature = signature
+      currentClass.classSignature = classSignature
       currentClass.packageSignature = currentPackageSignature
       // currentClass.packageName = currentPackageName
 
@@ -164,19 +164,19 @@ class SignatureVisitor(
     }
   }
 
-  /** Helper to extract and add method signature */
+  /** Helper to extract and add method classSignature */
   private def extractAndAddMethodSignature[C](
       ctx: C,
       getBody: C => org.antlr.v4.runtime.ParserRuleContext
   ): Unit = {
-    val signature = extractSignature(ctx, getBody)
+    val classSignature = extractSignature(ctx, getBody)
     if (!classStack.isEmpty) {
-      classStack.peek().methodSignatures.append(signature)
+      classStack.peek().methodSignatures.append(classSignature)
     }
     ()
   }
 
-  /** Helper to extract the signature text from a context up to the start of its
+  /** Helper to extract the classSignature text from a context up to the start of its
     * body.
     */
   private def extractSignature[C](

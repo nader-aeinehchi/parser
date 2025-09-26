@@ -3,11 +3,11 @@ package org.naderica.parser.sourcecode.java.standard
 import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.ListMap
 
-/** A simple data structure to hold a class's signature and its methods. */
+/** A simple data structure to hold a class's classSignature and its methods. */
 class ClassSignature {
   var packageSignature: String = ""
   // var packageName: String = ""
-  var signature: String = ""
+  var classSignature: String = ""
   val fieldSignatures: ListBuffer[String] = ListBuffer.empty
   val methodSignatures: ListBuffer[String] = ListBuffer.empty
   val innerClasses: ListBuffer[ClassSignature] = ListBuffer.empty
@@ -15,7 +15,7 @@ class ClassSignature {
   override def toString: String = {
     val sb = new StringBuilder
 
-    sb.append(s"Class Signature:\n $packageSignature \n $signature\n")
+    sb.append(s"Class Signature:\n $packageSignature \n $classSignature\n")
 
     if (methodSignatures.nonEmpty) {
       sb.append("\tMethods:\n")
@@ -52,7 +52,7 @@ class ClassSignature {
   def toJson(): String = {
 
     val packageJson = s""""package": "$packageSignature""""
-    val signatureJson = s""""signature": "$signature""""
+    val classSignatureJson = s""""classSignature": "$classSignature""""
 
     val methodsJson =
       methodSignatures.map(m => entry(m)).mkString("[", ",", "]")
@@ -63,7 +63,7 @@ class ClassSignature {
       innerClasses.map(((_.toJson()))).mkString("[", ",", "]")
 
     val cleanedPackage = entry(packageSignature)
-    val cleanedSignature = entry(signature)
+    val cleanedSignature = entry(classSignature)
 
     val finalJson = ListMap(
       "package:" -> cleanedPackage,
