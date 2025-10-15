@@ -1,0 +1,20 @@
+package org.naderica.parser.sourcecode.java20.standard.mapper
+import java.util.List as JList
+import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters._
+import scala.util.{Try, Success, Failure}
+import org.naderica.parser.sourcecode.ast.java.standard.Java20Parser.*
+import org.naderica.parser.sourcecode.java20.standard.grammar.PackageOrTypeName
+import org.naderica.parser.sourcecode.java20.standard.grammar.Identifier
+
+object PackageOrTypeNameMapper {
+  def toPackageOrTypeName(ctx: PackageOrTypeNameContext): PackageOrTypeName = {
+    val identifier = Identifier(ctx.identifier().getText)
+    val packageOrTypeName = Option(ctx.packageOrTypeName()).map(toPackageOrTypeName)
+    
+    PackageOrTypeName(
+      identifier = identifier,
+      packageOrTypeName = packageOrTypeName
+    )
+  }
+}

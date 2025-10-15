@@ -1,0 +1,291 @@
+package org.naderica.parser.sourcecode.java20.standard
+
+import java.util.{ArrayList, List, Stack}
+import scala.jdk.CollectionConverters._
+
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.misc.Interval
+import org.antlr.v4.runtime.ParserRuleContext
+import org.naderica.parser.sourcecode.ast.java.standard.Java20Parser.*
+import org.naderica.parser.sourcecode.ast.java.standard.Java20ParserBaseVisitor
+import org.naderica.parser.sourcecode.java20.standard.grammar.NormalClassDeclaration
+
+import org.naderica.parser.sourcecode.java20.standard.mapper.{
+  ClassBodyMapper,
+  ClassImplementsMapper,
+  ClassPermitsMapper,
+  ModifierMapper,
+  TypeMapper
+}
+
+class TypesafeVisitor(
+    val tokens: CommonTokenStream,
+    val jModifier: JModifier = JModifier.PUBLIC
+) extends Java20ParserBaseVisitor[Unit] {
+
+  private val classStack = new Stack[ClassInfo]()
+  private val topLevelClasses = new ArrayList[ClassInfo]()
+  private var currentPackageSignature: String = ""
+
+  def classSignatures() = topLevelClasses
+
+  override def visitPackageDeclaration(ctx: PackageDeclarationContext): Unit = {
+    import scala.jdk.CollectionConverters._
+
+    val modifier = extractJModifier(ctx.packageModifier())
+    val packageName = ctx.identifier().asScala.map(_.getText).mkString(".")
+    val packageSignature =
+      if (modifier == JModifier.PACKAGE_PRIVATE)
+        s"package $packageName;"
+      else
+        s"package ${modifier.toString.toLowerCase} $packageName;"
+
+// Store packageSignature and packageName for later use
+    this.currentPackageSignature = packageSignature
+    // this.currentPackageName = packageName
+    // println(packageSignature) // or store it as needed
+
+    super.visitPackageDeclaration(ctx)
+  }
+
+  override def visitNormalClassDeclaration(
+      ctx: NormalClassDeclarationContext
+  ): Unit = {
+
+    val modifiers = ctx.classModifier()
+    val typeIdentifier = ctx.typeIdentifier()
+    val typeParameters = ctx.typeParameters()
+    val classExtends = ctx.classExtends()
+    val classImplements = ctx.classImplements()
+    val classBody = ctx.classBody()
+    val classPermits = ctx.classPermits()
+    val name = ctx.typeIdentifier().getText
+
+    val m_modifiers = ModifierMapper.toClassModifier(modifiers)
+    val m_typeIdentifier = TypeMapper.toTypeIdentifier(typeIdentifier)
+    val m_typeParameters = TypeMapper.toTypeParameters(typeParameters)
+    val m_classExtends = TypeMapper.toClassExtends(classExtends)
+    val m_classImplements =
+      ClassImplementsMapper.toClassImplements(classImplements)
+
+    val m_classPermits = ClassPermitsMapper.toClassPermits(classPermits)
+    val m_classBody = ClassBodyMapper.toClassBody(classBody)
+
+    val normalInterfaceDeclaration = NormalClassDeclaration(
+      classModifiers = m_modifiers,
+      typeIdentifier = m_typeIdentifier,
+      typeParameters = Option(m_typeParameters),
+      classExtends = Option(m_classExtends),
+      classImplements = Option(m_classImplements),
+      classBody = m_classBody,
+      classPermits = Some(m_classPermits)
+    )
+
+    println(s"\nClass name: $name")
+    println(s"NormalClassDeclaration: $normalInterfaceDeclaration")
+
+    // println(s"Modifiers: ${modifiers.asScala.map(_.getText).mkString(" ")}")
+    // println(
+    //   s"Type Parameters: ${typeParameters.typeParameterList().toString()}"
+    // )
+    // println(s"Extends: ${classExtends.classType().getText}")
+    // println(s"Implements: ${classImplements.toString()}")
+    // println(s"Body: ${classBody.getText}")
+    // println(s"Permits: ${classPermits.asScala.map(_.getText).mkString(" ")}")
+
+    handleTopLevelConstruct(
+      ctx,
+      _.classBody(),
+      extractJModifier(ctx.classModifier())
+    )
+    super.visitNormalClassDeclaration(ctx)
+  }
+
+  override def visitNormalInterfaceDeclaration(
+      ctx: NormalInterfaceDeclarationContext
+  ): Unit = {
+    handleTopLevelConstruct(
+      ctx,
+      _.interfaceBody(),
+      extractJModifier(ctx.interfaceModifier())
+    )
+    super.visitNormalInterfaceDeclaration(ctx)
+  }
+
+  override def visitEnumDeclaration(
+      ctx: EnumDeclarationContext
+  ): Unit = {
+    handleTopLevelConstruct(
+      ctx,
+      _.enumBody(),
+      extractJModifier(ctx.classModifier())
+    )
+    super.visitEnumDeclaration(ctx)
+  }
+
+  override def visitRecordDeclaration(
+      ctx: RecordDeclarationContext
+  ): Unit = {
+    handleTopLevelConstruct(
+      ctx,
+      _.recordBody(),
+      extractJModifier(ctx.classModifier())
+    )
+    super.visitRecordDeclaration(ctx)
+  }
+
+  override def visitMethodDeclaration(ctx: MethodDeclarationContext): Unit = {
+    val modifier = extractJModifier(ctx.methodModifier())
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
+      extractAndAddMethodSignature(ctx, _.methodBody())
+    }
+  }
+
+// @Override public T visitInterfaceMethodDeclaration(Java20Parser.InterfaceMethodDeclarationContext ctx) { return visitChildren(ctx); }
+
+  override def visitInterfaceMethodDeclaration(
+      ctx: InterfaceMethodDeclarationContext
+  ): Unit = {
+    val modifier = extractJModifier(ctx.interfaceMethodModifier())
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
+      extractAndAddMethodSignature(ctx, _.methodBody())
+    }
+  }
+
+  override def visitConstructorDeclaration(
+      ctx: ConstructorDeclarationContext
+  ): Unit = {
+    val modifier = extractJModifier(ctx.constructorModifier())
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
+      extractAndAddMethodSignature(ctx, _.constructorBody())
+    }
+  }
+
+  override def visitConstantDeclaration(
+      ctx: ConstantDeclarationContext
+  ): Unit = {
+    extractAndAddFieldOrConstant(
+      extractJModifier(ctx.constantModifier()),
+      ctx.unannType().getText + " ",
+      ctx.variableDeclaratorList()
+    )
+  }
+
+  override def visitFieldDeclaration(
+      ctx: FieldDeclarationContext
+  ): Unit = {
+    extractAndAddFieldOrConstant(
+      extractJModifier(ctx.fieldModifier()),
+      ctx.unannType().getText + " ",
+      ctx.variableDeclaratorList()
+    )
+  }
+
+  override def visitEnumConstant(ctx: EnumConstantContext): Unit = {
+    val modifier = extractJModifier(ctx.enumConstantModifier())
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
+      val name = ctx.identifier().getText
+      if (!classStack.isEmpty) {
+        classStack.peek().methodSignatures.append(name)
+      }
+    }
+  }
+
+  /** Helper to handle top-level constructs (class, interface, enum, record) */
+  private def handleTopLevelConstruct[C](
+      ctx: C,
+      getBody: C => org.antlr.v4.runtime.ParserRuleContext,
+      modifier: JModifier
+  ): Unit = {
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
+      val classSignature = extractSignature(ctx, getBody)
+      val currentClass = ClassInfo()
+      currentClass.classSignature = classSignature
+      currentClass.packageSignature = currentPackageSignature
+      // currentClass.packageName = currentPackageName
+
+      if (classStack.isEmpty) {
+        topLevelClasses.add(currentClass)
+      } else {
+        classStack.peek().innerClasses.append(currentClass)
+      }
+      classStack.push(currentClass)
+    }
+  }
+
+  /** Helper to extract and add method classSignature */
+  private def extractAndAddMethodSignature[C](
+      ctx: C,
+      getBody: C => org.antlr.v4.runtime.ParserRuleContext
+  ): Unit = {
+    val classSignature = extractSignature(ctx, getBody)
+    if (!classStack.isEmpty) {
+      classStack.peek().methodSignatures.append(classSignature)
+    }
+    ()
+  }
+
+  /** Helper to extract the classSignature text from a context up to the start
+    * of its body.
+    */
+  private def extractSignature[C](
+      ctx: C,
+      getBody: C => org.antlr.v4.runtime.ParserRuleContext
+  ): String = {
+    tokens
+      .getText(
+        new Interval(
+          ctx
+            .asInstanceOf[org.antlr.v4.runtime.ParserRuleContext]
+            .start
+            .getTokenIndex,
+          getBody(ctx).start.getTokenIndex - 1
+        )
+      )
+      .trim
+  }
+
+  /** Extracts the access modifier from a list of modifier contexts. You may
+    * need to adapt this to your grammar.
+    */
+  private def extractJModifier(
+      modifiers: java.util.List[?]
+  ): JModifier = {
+    // import scala.jdk.CollectionConverters._
+
+    val mods = modifiers.asScala.map {
+      case ctx: ParserRuleContext => ctx.getText
+      case other                  => other.toString
+    }
+
+    if (mods.contains("private")) JModifier.PRIVATE
+    else if (mods.contains("protected")) JModifier.PROTECTED
+    else if (mods.contains("public")) JModifier.PUBLIC
+    else JModifier.PACKAGE_PRIVATE
+  }
+
+// Helper for both constant and field declarations
+  private def extractAndAddFieldOrConstant(
+      modifier: JModifier,
+      typeText: String,
+      varList: VariableDeclaratorListContext
+  ): Unit = {
+    if (jModifier.isMoreRestrictiveThan(modifier)) {
+      import scala.jdk.CollectionConverters._
+      for (vd <- varList.variableDeclarator().asScala) {
+        val name = vd.variableDeclaratorId().getText
+        val value =
+          if (vd.variableInitializer() != null)
+            " = " + vd.variableInitializer().getText
+          else ""
+        if (!classStack.isEmpty) {
+          classStack
+            .peek()
+            .fieldSignatures
+            .append(s"${modifier.toString} $typeText$name$value")
+        }
+      }
+    }
+  }
+
+}
