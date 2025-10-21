@@ -14,7 +14,16 @@ set -o pipefail
 # Configuration
 MAIN_PATH="src/main/scala/org/naderica/parser/sourcecode/java20/standard/grammar"
 TEST_PATH="src/test/scala/org/naderica/parser/sourcecode/java20/standard/grammar"
+
+# Option 1: Use environment variable (recommended for security)
 COPILOT_API_KEY="${COPILOT_API_KEY:-}"
+
+# Option 2: Direct assignment (uncomment and replace with your key)
+# COPILOT_API_KEY="your_actual_api_key_here"
+
+# Option 3: Read from file (uncomment if you store key in a file)
+# COPILOT_API_KEY=$(cat ~/.copilot_api_key 2>/dev/null || echo "")
+
 WORKSPACE_ROOT="$(pwd)"
 LOG_FILE="autonomous_test_generation.log"
 MAX_RETRIES=3
@@ -116,8 +125,14 @@ check_prerequisites_silent() {
 find_untested_classes() {
     log "Discovering classes without tests..."
     
+	echo "+++++++++++++++++++++++++++++++++++++++++++"
     local main_classes=$(find "$MAIN_PATH" -name "*.scala" -exec basename {} .scala \; 2>/dev/null | sort)
-    local test_classes=$(find "$TEST_PATH" -name "*Test.scala" -exec basename {} Test.scala \; 2>/dev/null | sort)
+	echo "Found main classes:........................................................."
+
+	echo "$main_classes"
+	exit 0 
+	
+	local test_classes=$(find "$TEST_PATH" -name "*Test.scala" -exec basename {} Test.scala \; 2>/dev/null | sort)
     
     # Use comm to find classes without tests
     local untested_classes=$(comm -23 <(echo "$main_classes") <(echo "$test_classes") 2>/dev/null)
@@ -349,6 +364,7 @@ EOF
 process_all_autonomous() {
     log "Starting fully autonomous test generation process..."
     
+	echo "#############################################"
     local untested_classes
     untested_classes=$(find_untested_classes)
     
@@ -356,7 +372,7 @@ process_all_autonomous() {
         success "No untested classes found. All classes have tests!"
         return 0
     fi
-    
+       
     local classes_array=($untested_classes)
     local total_count=${#classes_array[@]}
     local processed_count=0
@@ -442,13 +458,17 @@ process_all_autonomous() {
 # ==========================================
 
 main_autonomous() {
+    # Test basic output first
+    echo "Script starting - basic echo test"
+    
+    # Initialize log file first
+    echo "Autonomous Test Generation Log - $(date)" > "$LOG_FILE"
+    echo "Script running without user prompts or confirmations" >> "$LOG_FILE"
+    
+    # Now test log function
     log "Starting Fully Autonomous Test Generation Script"
     log "Workspace: $WORKSPACE_ROOT"
     log "No user interaction required - running completely autonomously"
-    
-    # Initialize log
-    echo "Autonomous Test Generation Log - $(date)" > "$LOG_FILE"
-    echo "Script running without user prompts or confirmations" >> "$LOG_FILE"
     
     # Check prerequisites
     if ! check_prerequisites_silent; then
