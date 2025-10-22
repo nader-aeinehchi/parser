@@ -103,7 +103,7 @@ class TestGenerator(
     var successCount = 0
     val failedBuf = scala.collection.mutable.ListBuffer.empty[String]
     for (className <- group) {
-      val SingleTestGenerator = new SingleTestGenerator(
+      val singleTestGenerator = new SingleTestGenerator(
         className,
         services,
         mainPath,
@@ -113,7 +113,7 @@ class TestGenerator(
         timeoutSeconds
       )
 
-      val ok = SingleTestGenerator.generate()
+      val ok = singleTestGenerator.generate()
       if (ok) successCount += 1
       else failedBuf += className
     }
